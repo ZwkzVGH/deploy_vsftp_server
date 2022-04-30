@@ -1,0 +1,12 @@
+- name: try to remove root_path
+  file:
+    path: "{{ root_path }}"
+  ignore_errors: true
+
+- name: create root_path
+  file:
+    path: "{{ root_path }}"
+    state: directory
+    group: root
+    owner: "{{ vsftpd.guest_username }}"
+    mode: 0750

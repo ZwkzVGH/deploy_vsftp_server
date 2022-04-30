@@ -1,0 +1,31 @@
+#author:  puruikang
+#data:  2022-4-25
+#explanation:  customize task list
+
+vsftpd:
+  chroot_list: /etc/vsftpd/vsftpd.chroot_list
+  # 由于chroot_list_enable=YES 此文件下面的用户可以访问上层目录
+  user_list: /etc/vsftpd/vsftpd.user_list
+  # 由于userlist_deny=ON 只有此文件下面的用户能登录
+  data_port: 21211
+  # 数据传送端口
+  listen_address: 192.168.174.136
+  # ftp server 监听ip
+  listen_port: 21212
+  # ftp server 监听port
+  xferlog_file: /var/log/xferlog
+  # 记录下载上传完整信息
+  userconfig: /etc/vsftpd/userconfig
+  # 用户登录信息存放目录
+  guest_username: test1
+  # 将虚拟用户映射为本地用户
+  guest_pass: 12345678
+  # 虚拟用户ftp登录密码
+
+
+root_path: /data/ftp
+#注：不要用/data  或类似 /目录下的任何目录，
+  #请使用三级目录，例：/a/b 而不使用 /a作为工作目录
+ftp_user: test
+
+

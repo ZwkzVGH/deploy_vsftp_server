@@ -1,0 +1,121 @@
+#author:  puruikang
+#data:  2022-4-25
+#explanation:  customize task list
+
+- name: try to remove vsftpd
+  yum:
+    name: vsftpd
+    state: absent
+  ignore_errors: true
+
+- name: try to remove /tmp/vsftpd  && mkdir it
+  file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+  loop:
+    - { path: "/tmp/vsftpd", state: "absent" }
+    - { path: "/tmp/vsftpd", state: "directory" }
+
+- name: send vsftpd -v3.0.2 rpm
+  copy:
+    src: vsftpd-3.0.2-29.el7_9.x86_64.rpm
+    dest: /tmp/vsftpd/vsftpd-3.0.2-29.el7_9.x86_64.rpm
+
+- name: yum install vsftpd - v3.0.2
+  shell:
+    yum install /tmp/vsftpd/vsftpd-3.0.2-29.el7_9.x86_64.rpm -y
+
+- name: try to remove vsftpd work directory of file && creadit it
+  file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+  loop:
+    - { path: "{{ vsftpd.chroot_list }}", state: "absent" }
+    - { path: "{{ vsftpd.user_list }}", state: "absent" }
+    - { path: "{{ vsftpd.userconfig }}", state: "absent" }
+    - { path: "{{ vsftpd.userconfig }}", state: "directory" }
+
+- name: send vsftpd.conf
+  template:
+    src: vsftpd.conf.j2
+    dest: /etc/vsftpd/vsftpd.conf
+
+#- name: start && enable vsftpd server
+#  service:
+#    name: vsftpd
+#    state: started
+#    enabled: yes
+
+- name: try to remove manage user
+  user:
+    name: "{{ ftp_user }}"
+    state: absent
+    remove: yes
+  ignore_errors: true
+
+- name: create virtual manage user
+  shell:
+    "useradd -g root -M -d {{ root_path }}/{{ ftp_user }} -s /sbin/nologin {{ ftp_user }}"
+
+- name: send virtual limit conf
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  loop:
+    - { src: "chroot_list.j2" , dest: "{{ vsftpd.chroot_list }}" }
+    - { src: "user_list.j2" , dest: "{{ vsftpd.user_list }}" }
+
+- name: try to remove root_path
+  file:
+    path: "{{ root_path }}"
+    state: absent
+  ignore_errors: true
+
+- name: create root_path
+  file:
+    path: "{{ root_path }}/{{ ftp_user }}"
+    state: directory
+    group: root
+    owner: "{{ ftp_user }}"
+    mode: 0750
+
+- name: send login.txt
+  template:
+    src: logins.txt.j2
+    dest: /etc/vsftpd/logins.txt
+
+- name: create pam user db
+  shell:
+    db_load -T -t hash -f /etc/vsftpd/logins.txt /etc/vsftpd/vsftpd_login.db
+
+- name: send virtual user config
+  template:
+    src: user.j2
+    dest: "{{ vsftpd.userconfig }}/{{ vsftpd.guest_username }}"
+
+- name: try to remove virtual user directory && create it
+  file:
+    path: "{{ root_path }}/{{ ftp_user }}/{{ vsftpd.guest_username }}"
+    state: "{{ item }}"
+    group: root
+    owner: "{{ ftp_user }}"
+    mode: 0777
+  loop:
+    - absent
+    - directory
+
+- name: try to remove pam user conf
+  file:
+    path: /etc/pam.d/ftp
+    state: absent
+
+- name: send pam user conf
+  copy:
+    src: ftp
+    dest: /etc/pam.d/ftp
+
+- name: restart vsftpd server
+  service:
+    name: vsftpd
+    state: restarted
+

@@ -1,0 +1,26 @@
+#author:  puruikang
+#data:  2022-4-25
+#explanation:  customize task list
+
+- name: try to remove /tmp/vsftpd && create it
+  file:
+    path: "{{ item.path }}"
+    state: "{{ item.state }}"
+  loop:
+    - { path: "/tmp/vsftpd", state: "absent" }
+    - { path: "/tmp/vsftpd", state: "directory" }
+
+- name: send ftp-v0.17 rpm
+  copy:
+    src: ftp-0.17-67.el7.x86_64.rpm
+    dest: /tmp/vsftpd/ftp-0.17-67.el7.x86_64.rpm
+
+- name: try to remove ftp
+  yum:
+    name: ftp
+    state: absent
+  ignore_errors: true
+
+- name: yum install ftp
+  shell:
+    yum install /tmp/vsftpd/ftp-0.17-67.el7.x86_64.rpm -y

@@ -1,0 +1,6 @@
+---
+- hosts: ftp
+  roles:
+    - base
+  vars_files:
+    - "./roles/base/vars/main.yml"

@@ -1,0 +1,6 @@
+---
+- hosts: test
+  roles:
+    - test
+  vars_files:
+    - "./roles/base/vars/main.yml"

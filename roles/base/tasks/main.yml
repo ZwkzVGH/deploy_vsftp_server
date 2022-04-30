@@ -1,0 +1,12 @@
+#author:  puruikang
+#data:  2022-4-25
+#explanation:  customize task list
+
+---
+- name: deploy vsftpd server
+  include_tasks: deploy_vsftpd.yml
+  when: ansible_facts['default_ipv4']['address'] == vsftpd.listen_address
+
+- name: ftp client
+  include_tasks: ftp_client.yml
+  when: ansible_facts['default_ipv4']['address'] != vsftpd.listen_address
